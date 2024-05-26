@@ -6,3 +6,4 @@ dist
 yarn.lock
 .umi
 .idea
+config.bat
