@@ -1,6 +1,8 @@
 import dayjs from 'dayjs'
 import RcGantt, { enUS } from 'rc-gantt'
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
+import type { DropResult } from 'react-beautiful-dnd'
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd'
 
 // Define interfaces for the task and dependencies
 interface TaskStatus {
@@ -34,8 +36,8 @@ interface Task {
   id: string
   name: string
   startDateExists: boolean
-  startDate: string
-  endDate: string
+  startDate: string | null
+  endDate: string | null
   dependencies: string[]
   custom_class: string
   projectTaskStatus: TaskStatus
@@ -45,12 +47,12 @@ interface Task {
   dependencyList: Dependency[]
   waitingOnDependencyCount: number
   blockingOnDependencyCount: number
-  activityName?: string // Since this property might exist in some tasks
-  dueDate?: string // Since this property might exist in some tasks
+  activityName?: string
+  dueDate?: string
 }
 
 interface Data {
-  id: string // Keep this as string to match Task's id
+  id: string
   name: string
   startDate: string
   endDate: string
@@ -102,8 +104,6 @@ const completeData: Task[] = [
     id: '66bed9450d8a818543bb1d92',
     name: 'Task 4',
     startDateExists: true,
-    startDate: '2024-08-24',
-    endDate: '2024-09-07',
     dependencies: [],
     custom_class: 'cc-red',
     projectTaskStatus: {
@@ -163,6 +163,10 @@ const completeData: Task[] = [
         },
         assignee: [],
         children: [],
+        collapsed: false,
+        dependencyList: [],
+        waitingOnDependencyCount: 0,
+        blockingOnDependencyCount: 0,
       },
     ],
     collapsed: true,
@@ -184,22 +188,17 @@ const completeData: Task[] = [
   },
 ]
 
-const formattedData: Data[] = completeData.map(task => ({
-  id: task.id, // Use the original `id` from the task
-  name: task.name,
-  startDate: dayjs(task.startDate).format('YYYY-MM-DD'),
-  endDate: dayjs(task.endDate).format('YYYY-MM-DD'),
-  // Do not spread the original task to prevent overwriting `id`, `name`, `startDate`, `endDate`
-}))
+const formattedData: Data[] = completeData
+  .filter(task => task.startDate && task.endDate) // Only include scheduled tasks
+  .map(task => ({
+    id: task.id,
+    name: task.name,
+    startDate: dayjs(task.startDate).format('YYYY-MM-DD'),
+    endDate: dayjs(task.endDate).format('YYYY-MM-DD'),
+  }))
 
 const transformDependencies = (tasks: Task[]) => {
   const dependencies: { from: string; to: string; type: string }[] = []
-
-  if (!tasks || !Array.isArray(tasks)) {
-    console.error('Tasks are not defined or not an array')
-    return dependencies
-  }
-
   tasks.forEach(task => {
     if (task.dependencyList && Array.isArray(task.dependencyList)) {
       const blockingDependency = task.dependencyList.find(dependency => dependency.dependencyType === 'Blocking')
@@ -212,45 +211,132 @@ const transformDependencies = (tasks: Task[]) => {
       }
     }
   })
-
   return dependencies
 }
 
 const App: React.FC = () => {
   const [data, setData] = useState<Data[]>(formattedData)
+  const [unscheduledTasks, setUnscheduledTasks] = useState<Task[]>(
+    completeData.filter(task => !task.startDate || !task.endDate) // Unscheduled tasks
+  )
+  const ganttRef = useRef<HTMLDivElement>(null) // Create a ref for the Gantt chart container
 
   const dependencies = transformDependencies(completeData)
-  // console.log('data', dependencies)
+
+  const handleOnDragEnd = (result: DropResult) => {
+    const { destination, source, draggableId } = result
+
+    if (!destination) return
+
+    if (destination.droppableId === source.droppableId && destination.index === source.index) return
+
+    const draggedTask = unscheduledTasks.find(task => task.id === draggableId)
+
+    if (draggedTask && destination.droppableId === 'gantt') {
+      // Get the drop position relative to the Gantt chart
+      const ganttElement = ganttRef.current
+      if (!ganttElement) return
+
+      const ganttRect = ganttElement.getBoundingClientRect()
+      const dropPositionX = result.source.x - ganttRect.left // X position relative to the Gantt chart
+
+      const pxPerDay = 100 // Example: 100 pixels per day, adjust based on your Gantt chart settings
+      const dropDate = dayjs()
+        .add(Math.floor(dropPositionX / pxPerDay), 'days')
+        .format('YYYY-MM-DD')
+
+      const newTask = {
+        ...draggedTask,
+        startDate: dropDate,
+        endDate: dayjs(dropDate).add(1, 'week').format('YYYY-MM-DD'),
+      }
+
+      setData(prev => [
+        ...prev,
+        {
+          id: newTask.id,
+          name: newTask.name,
+          startDate: newTask.startDate,
+          endDate: newTask.endDate,
+        },
+      ])
+
+      setUnscheduledTasks(prev => prev.filter(task => task.id !== draggableId))
+    }
+  }
 
   return (
-    <div style={{ width: '100%', height: 500 }}>
-      <RcGantt<Data>
-        data={data}
-        columns={[
-          {
-            name: 'name',
-            label: 'Custom Title',
-            width: 100,
-          },
-        ]}
-        dependencies={dependencies}
-        locale={enUS}
-        onUpdate={async (row, startDate, endDate) => {
-          // console.log('update', row, startDate, endDate)
-          setData(prev => {
-            const newList = [...prev]
-            const index = newList.findIndex(val => val.id === row.id)
-            newList[index] = {
-              ...row,
-              startDate: dayjs(startDate).format('YYYY-MM-DD'),
-              endDate: dayjs(endDate).format('YYYY-MM-DD'),
-            }
-            return newList
-          })
-          return true
-        }}
-      />
-    </div>
+    <DragDropContext onDragEnd={handleOnDragEnd}>
+      <div style={{ display: 'flex', width: '100%', height: '800px' }}>
+        <Droppable droppableId='tasks'>
+          {provided => (
+            <div
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+              style={{
+                width: '200px',
+                padding: '8px',
+                borderRight: '1px solid #ccc',
+                overflowY: 'auto',
+              }}
+            >
+              <h3>Unscheduled Tasks</h3>
+              {unscheduledTasks.map((task, index) => (
+                <Draggable key={task.id} draggableId={task.id} index={index}>
+                  {provided => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      style={{
+                        padding: '8px',
+                        margin: '4px',
+                        background: '#f0f0f0',
+                        border: '1px solid #ccc',
+                        cursor: 'move',
+                        ...provided.draggableProps.style,
+                      }}
+                    >
+                      {task.name}
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+
+        <div ref={ganttRef} style={{ flex: 1, padding: '8px', position: 'relative' }}>
+          <Droppable droppableId='gantt'>
+            {provided => (
+              <div ref={provided.innerRef} {...provided.droppableProps} style={{ height: '100%' }}>
+                <RcGantt<Data>
+                  data={data}
+                  columns={[
+                    {
+                      name: 'name',
+                      label: 'Task Name',
+                      width: 150,
+                    },
+                  ]}
+                  dependencies={dependencies}
+                  locale={enUS}
+                  onUpdate={async (row, startDate, endDate) => {
+                    setData(prev => {
+                      const newList = prev.map(item => (item.id === row.id ? { ...item, startDate, endDate } : item))
+                      return newList
+                    })
+                    return true
+                  }}
+                />
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </div>
+      </div>
+    </DragDropContext>
   )
 }
 

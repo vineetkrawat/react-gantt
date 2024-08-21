@@ -20,6 +20,8 @@ $ yarn add rc-gantt  # or npm i rc-gantt -S
 
 ## 🔨 Demo
 
+<code src="./demo/basic.en-US.tsx"></code>
+
 ```tsx
 import RcGantt, { enUS } from 'rc-gantt'
 
@@ -44,4 +46,4 @@ return (
 
 ## Feedback
 
-Please visit [Github](https://github.com/ahwgs/react-gantt/issues) 
+Please visit [Github](https://github.com/ahwgs/react-gantt/issues)
