@@ -153,7 +153,7 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
               </div>
             )} */}
             {/* background resize handler */}
-            {/* <DragResize
+            <DragResize
               className={classNames(`${prefixClsTaskBar}-resize-handle`, `${prefixClsTaskBar}-resize-handle-left`, {
                 [`${prefixClsTaskBar}-resize-handle-disabled`]: disabled,
               })}
@@ -172,7 +172,7 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
               reachEdge={reachEdge}
               onBeforeResize={handleBeforeResize('left')}
               disabled={disabled}
-            /> */}
+            />
             {/* <DragResize
               className={classNames(`${prefixClsTaskBar}-resize-handle`, `${prefixClsTaskBar}-resize-handle-right`, {
                 [`${prefixClsTaskBar}-resize-handle-disabled`]: disabled,
@@ -217,8 +217,8 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
         >
           {renderBar ? (
             renderBar(data, {
-              width: width + 30,
-              height: barHeight + 1,
+              width: width + 1,
+              height: 15,
             })
           ) : (
             <svg
