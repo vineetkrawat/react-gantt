@@ -82,12 +82,12 @@ const Dependence: React.FC<DependenceProps> = ({ data }) => {
           ${points.map(point => `L${point.x},${point.y}`).join('\n')}
           L${end.x},${end.y}
           `}
-        strokeWidth='3'
+        strokeWidth='2'
         fill='none'
       />
       <path
         name='arrow'
-        strokeWidth='3'
+        strokeWidth='2'
         fill={color}
         d={`
         M${end.x},${end.y} 
