@@ -4,7 +4,6 @@ import Context from '../../context'
 import BarList from '../bar-list'
 import BarThumbList from '../bar-thumb-list'
 import Dependencies from '../dependencies'
-import DragPresent from '../drag-present'
 import Today from '../today'
 import './index.less'
 
@@ -68,7 +67,7 @@ const Chart: React.FC = () => {
               <path d={`M${item.left},0 L${item.left},${bodyScrollHeight}`} />
               <rect
                 fill='url(#repeat)'
-                opacity='0.5'
+                opacity='1'
                 strokeWidth='0'
                 x={item.left}
                 y={0}
@@ -82,7 +81,7 @@ const Chart: React.FC = () => {
             </g>
           )
         )}
-        <DragPresent />
+        {/* <DragPresent /> */}
         <Dependencies />
       </svg>
       <div

@@ -1,5 +1,5 @@
 import { useSize } from 'ahooks'
-import { Dayjs } from 'dayjs'
+import type { Dayjs } from 'dayjs'
 import React, { useContext, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
 import Chart from './components/chart'
 import Divider from './components/divider'
@@ -12,11 +12,12 @@ import TimeAxis from './components/time-axis'
 import TimeAxisScaleSelect from './components/time-axis-scale-select'
 import TimeIndicator from './components/time-indicator'
 import { BAR_HEIGHT, ROW_HEIGHT, TABLE_INDENT } from './constants'
-import Context, { GanttContext } from './context'
+import type { GanttContext } from './context'
+import Context from './context'
 import './Gantt.less'
-import { zhCN } from './locales'
+import { enUS } from './locales'
 import GanttStore from './store'
-import { DefaultRecordType, Gantt } from './types'
+import type { DefaultRecordType, Gantt } from './types'
 
 const prefixCls = 'gantt'
 
@@ -66,7 +67,7 @@ export interface GanttProps<RecordType = DefaultRecordType> {
    * 自定义日期筛选维度
    */
   customSights?: Gantt.SightConfig[]
-  locale?: GanttLocale;
+  locale?: GanttLocale
 
   /**
    * 隐藏左侧表格
@@ -79,32 +80,32 @@ export interface GanttRef {
 }
 
 export interface GanttLocale {
-  today: string;
-  day: string;
-  days: string;
-  week: string;
-  month: string;
-  quarter: string;
-  halfYear: string;
-  firstHalf: string;
-  secondHalf: string,
+  today: string
+  day: string
+  days: string
+  week: string
+  month: string
+  quarter: string
+  halfYear: string
+  firstHalf: string
+  secondHalf: string
   majorFormat: {
-    day: string;
-    week: string;
-    month: string;
-    quarter: string;
-    halfYear: string;
-  },
+    day: string
+    week: string
+    month: string
+    quarter: string
+    halfYear: string
+  }
   minorFormat: {
-    day: string;
-    week: string;
-    month: string;
-    quarter: string;
-    halfYear: string;
+    day: string
+    week: string
+    month: string
+    quarter: string
+    halfYear: string
   }
 }
 
-export const defaultLocale: GanttLocale = {...zhCN};
+export const defaultLocale: GanttLocale = { ...enUS }
 
 const GanttComponent = <RecordType extends DefaultRecordType>(props: GanttProps<RecordType>) => {
   const {
@@ -137,7 +138,7 @@ const GanttComponent = <RecordType extends DefaultRecordType>(props: GanttProps<
     renderRightText,
     onExpand,
     customSights = [],
-    locale = {...defaultLocale},
+    locale = { ...defaultLocale },
     hideTable = false,
   } = props
 

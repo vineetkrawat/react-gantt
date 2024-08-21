@@ -2,7 +2,7 @@ import find from 'lodash/find'
 import { observer } from 'mobx-react-lite'
 import React, { useContext } from 'react'
 import Context from '../../context'
-import { Gantt } from '../../types'
+import type { Gantt } from '../../types'
 import styles from './Dependence.less'
 
 const spaceX = 10
@@ -54,7 +54,7 @@ function getPoints(from: Point, to: Point, type: Gantt.DependenceType) {
 }
 const Dependence: React.FC<DependenceProps> = ({ data }) => {
   const { store, barHeight } = useContext(Context)
-  const { from, to, type, color = '#f87872' } = data
+  const { from, to, type, color = 'black' } = data
   const barList = store.getBarList
   const fromBar = find(barList, bar => bar.record.id === from)
   const toBar = find(barList, bar => bar.record.id === to)
@@ -82,12 +82,12 @@ const Dependence: React.FC<DependenceProps> = ({ data }) => {
           ${points.map(point => `L${point.x},${point.y}`).join('\n')}
           L${end.x},${end.y}
           `}
-        strokeWidth='1'
+        strokeWidth='3'
         fill='none'
       />
       <path
         name='arrow'
-        strokeWidth='1'
+        strokeWidth='3'
         fill={color}
         d={`
         M${end.x},${end.y} 

@@ -1,8 +1,8 @@
-import React, { useCallback, useContext, useMemo } from 'react'
-import { observer } from 'mobx-react-lite'
 import classNames from 'classnames'
+import { observer } from 'mobx-react-lite'
+import React, { useCallback, useContext, useMemo } from 'react'
 import Context from '../../context'
-import { Gantt } from '../../types'
+import type { Gantt } from '../../types'
 import './index.less'
 
 interface TaskBarProps {
@@ -32,7 +32,7 @@ const TaskBarThumb: React.FC<TaskBarProps> = ({ data }) => {
   )
 
   const getBackgroundColor = useMemo(
-    () => record.backgroundColor || (getBarColor && getBarColor(record).backgroundColor),
+    () => record.backgroundColor || (getBarColor && getBarColor(record).backgroundColor) || 'blue',
     [record]
   )
 

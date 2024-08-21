@@ -6,7 +6,7 @@ import React, { useCallback, useContext, useMemo } from 'react'
 import { TOP_PADDING } from '../../constants'
 import Context from '../../context'
 import { ONE_DAY_MS } from '../../store'
-import { Gantt } from '../../types'
+import type { Gantt } from '../../types'
 import DragResize from '../drag-resize'
 import './index.less'
 
@@ -105,13 +105,13 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
     [data.record, onBarClick]
   )
   const reachEdge = usePersistFn((position: 'left' | 'right') => position === 'left' && store.translateX <= 0)
-  // 根据不同的视图确定拖动时的单位，在任何视图下都以一天为单位
+  // The dragging unit is determined according to different views. In any view, it is in one day.
   const grid = useMemo(() => ONE_DAY_MS / store.pxUnitAmp, [store.pxUnitAmp])
 
-  const moveCalc = -(width / store.pxUnitAmp);
+  const moveCalc = -(width / store.pxUnitAmp)
 
   const days = useMemo(() => {
-    const daysWidth = Number(getDateWidth(translateX + width + moveCalc, translateX));
+    const daysWidth = Number(getDateWidth(translateX + width + moveCalc, translateX))
 
     return `${daysWidth} ${daysWidth > 1 ? locale.days : locale.day}`
   }, [translateX, width, moveCalc, translateX])
@@ -152,7 +152,8 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
                 </svg>
               </div>
             )} */}
-            <DragResize
+            {/* background resize handler */}
+            {/* <DragResize
               className={classNames(`${prefixClsTaskBar}-resize-handle`, `${prefixClsTaskBar}-resize-handle-left`, {
                 [`${prefixClsTaskBar}-resize-handle-disabled`]: disabled,
               })}
@@ -171,8 +172,8 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
               reachEdge={reachEdge}
               onBeforeResize={handleBeforeResize('left')}
               disabled={disabled}
-            />
-            <DragResize
+            /> */}
+            {/* <DragResize
               className={classNames(`${prefixClsTaskBar}-resize-handle`, `${prefixClsTaskBar}-resize-handle-right`, {
                 [`${prefixClsTaskBar}-resize-handle-disabled`]: disabled,
               })}
@@ -191,11 +192,11 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
               reachEdge={reachEdge}
               onBeforeResize={handleBeforeResize('right')}
               disabled={disabled}
-            />
-            <div
+            /> */}
+            {/* <div
               className={classNames(`${prefixClsTaskBar}-resize-bg`, `${prefixClsTaskBar}-resize-bg-compact`)}
               style={{ width: width + 30, left: -14 }}
-            />
+            /> */}
           </>
         )}
         <DragResize
@@ -216,7 +217,7 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
         >
           {renderBar ? (
             renderBar(data, {
-              width: width + 1,
+              width: width + 30,
               height: barHeight + 1,
             })
           ) : (
@@ -256,12 +257,12 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
           )}
         </DragResize>
       </div>
-      {(allowDrag || disabled || alwaysShowTaskBar) && (
+      {/* {(allowDrag || disabled || alwaysShowTaskBar) && (
         <div className={`${prefixClsTaskBar}-label`} style={{ left: width / 2 - 10 }}>
           {days}
         </div>
-      )}
-      {(stepGesture === 'moving' || allowDrag || alwaysShowTaskBar) && (
+      )} */}
+      {/* {(stepGesture === 'moving' || allowDrag || alwaysShowTaskBar) && (
         <>
           <div className={`${prefixClsTaskBar}-date-text`} style={{ left: width + 16 }}>
             {renderRightText ? renderRightText(data) : dateTextFormat(translateX + width + moveCalc)}
@@ -270,7 +271,7 @@ const TaskBar: React.FC<TaskBarProps> = ({ data }) => {
             {renderLeftText ? renderLeftText(data) : dateTextFormat(translateX)}
           </div>
         </>
-      )}
+      )} */}
     </div>
   )
 }

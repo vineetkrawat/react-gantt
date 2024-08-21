@@ -18,7 +18,7 @@ use `data` `columns` `onUpdate` config, Show a basic Gantt chart
 
 ### Add Task Bar
 
-click to create  task`bar`
+click to create task`bar`
 
 <code src="./demo/add.en-US.tsx"></code>
 
@@ -105,7 +105,7 @@ export interface Dependence {
 
 ### `Bar` Definition
 
-  When we need to use some custom functions, we will be returned the following type of data, where `record` is the source data
+When we need to use some custom functions, we will be returned the following type of data, where `record` is the source data
 
 ```typescript
 export interface Bar<RecordType = DefaultRecordType> {
@@ -170,7 +170,7 @@ export type Sight = 'day' | 'week' | 'month' | 'quarter' | 'halfYear'
 
 has `innerRef`
 
-| 参数           | 说明     | 类型       | 默认值 |
-| -------------- | -------- | ---------- | ------ |
-| backToday      | backToday | `Function` |
+| 参数           | 说明           | 类型       | 默认值 |
+| -------------- | -------------- | ---------- | ------ |
+| backToday      | backToday      | `Function` |
 | getWidthByDate | getWidthByDate | `Function` |

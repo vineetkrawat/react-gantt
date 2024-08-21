@@ -1,21 +1,21 @@
-import React, { useContext } from 'react';
-import { observer } from 'mobx-react-lite';
-import classNames from 'classnames';
-import { Gantt } from '../../types';
-import { getMaxRange } from '../../utils';
-import Context from '../../context';
-import './index.less';
+import classNames from 'classnames'
+import { observer } from 'mobx-react-lite'
+import React, { useContext } from 'react'
+import Context from '../../context'
+import type { Gantt } from '../../types'
+import { getMaxRange } from '../../utils'
+import './index.less'
 interface GroupBarProps {
-  data: Gantt.Bar;
+  data: Gantt.Bar
 }
-const height = 8;
+const height = 8
 const GroupBar: React.FC<GroupBarProps> = ({ data }) => {
-  const { prefixCls, renderGroupBar } = useContext(Context);
-  const { translateY } = data;
-  const { translateX, width } = getMaxRange(data);
+  const { prefixCls, renderGroupBar } = useContext(Context)
+  const { translateY } = data
+  const { translateX, width } = getMaxRange(data)
   return (
     <div
-      role="none"
+      role='none'
       className={classNames(`${prefixCls}-group-bar`)}
       style={{
         transform: `translate(${translateX}px, ${translateY}px)`,
@@ -30,8 +30,8 @@ const GroupBar: React.FC<GroupBarProps> = ({ data }) => {
             })
           ) : (
             <svg
-              xmlns="http://www.w3.org/2000/svg"
-              version="1.1"
+              xmlns='http://www.w3.org/2000/svg'
+              version='1.1'
               width={width + 1}
               height={height + 8}
               viewBox={`0 0 ${width + 1} ${height + 8}`}
@@ -57,6 +57,6 @@ const GroupBar: React.FC<GroupBarProps> = ({ data }) => {
         </div>
       </div>
     </div>
-  );
-};
-export default observer(GroupBar);
+  )
+}
+export default observer(GroupBar)

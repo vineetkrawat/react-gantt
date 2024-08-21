@@ -1,4 +1,5 @@
-import dayjs, { Dayjs } from 'dayjs'
+import type { Dayjs } from 'dayjs'
+import dayjs from 'dayjs'
 import advancedFormat from 'dayjs/plugin/advancedFormat'
 import isBetween from 'dayjs/plugin/isBetween'
 import isLeapYear from 'dayjs/plugin/isLeapYear'
@@ -8,10 +9,12 @@ import weekOfYear from 'dayjs/plugin/weekOfYear'
 import debounce from 'lodash/debounce'
 import find from 'lodash/find'
 import throttle from 'lodash/throttle'
-import { action, computed, observable, runInAction, toJS } from 'mobx'
-import React, { createRef } from 'react'
+import { action, computed, makeObservable, observable, runInAction, toJS } from 'mobx'
+import type React from 'react'
+import { createRef } from 'react'
 import { HEADER_HEIGHT, TOP_PADDING } from './constants'
-import { GanttProps as GanttProperties, GanttLocale, defaultLocale } from './Gantt'
+import type { GanttLocale, GanttProps as GanttProperties } from './Gantt'
+import { defaultLocale } from './Gantt'
 import { Gantt } from './types'
 import { flattenDeep, transverseData } from './utils'
 
@@ -21,8 +24,10 @@ dayjs.extend(quarterOfYear)
 dayjs.extend(advancedFormat)
 dayjs.extend(isBetween)
 dayjs.extend(isLeapYear)
+
 export const ONE_DAY_MS = 86400000
-// 视图日视图、周视图、月视图、季视图、年视图
+
+// Get view type list based on locale
 export const getViewTypeList = locale => {
   return [
     {
@@ -52,6 +57,8 @@ export const getViewTypeList = locale => {
     },
   ] as Gantt.SightConfig[]
 }
+
+// Function to check if a date is a rest day (weekend)
 function isRestDay(date: string) {
   const calc = [0, 6]
   return calc.includes(dayjs(date).weekday())
@@ -69,6 +76,66 @@ class GanttStore {
     customSights: Gantt.SightConfig[]
     locale: GanttLocale
   }) {
+    makeObservable(this, {
+      data: observable,
+      originData: observable,
+      columns: observable,
+      dependencies: observable,
+      scrolling: observable,
+      scrollTop: observable,
+      collapse: observable,
+      tableWidth: observable,
+      viewWidth: observable,
+      width: observable,
+      height: observable,
+      bodyWidth: observable,
+      translateX: observable,
+      sightConfig: observable,
+      showSelectionIndicator: observable,
+      selectionIndicatorTop: observable,
+      dragging: observable,
+      draggingType: observable,
+      disabled: observable,
+      setData: action,
+      toggleCollapse: action,
+      setRowCollapse: action,
+      setOnUpdate: action,
+      setColumns: action,
+      setDependencies: action,
+      setHideTable: action,
+      handlePanMove: action,
+      handlePanEnd: action,
+      syncSize: action,
+      handleResizeTableWidth: action,
+      initWidth: action,
+      setTranslateX: action,
+      switchSight: action,
+      scrollToToday: action,
+      handleWheel: action,
+      handleMouseMove: action,
+      showSelectionBar: action,
+      handleDragStart: action,
+      handleDragEnd: action,
+      handleInvalidBarLeave: action,
+      handleInvalidBarHover: action,
+      handleInvalidBarDragStart: action,
+      handleInvalidBarDragEnd: action,
+      updateBarSize: action,
+      updateTaskDate: action,
+      getBarList: computed,
+      todayTranslateX: computed,
+      scrollBarWidth: computed,
+      scrollLeft: computed,
+      scrollWidth: computed,
+      bodyClientHeight: computed,
+      getColumnsWidth: computed,
+      totalColumnWidth: computed,
+      bodyScrollHeight: computed,
+      pxUnitAmp: computed,
+      translateAmp: computed,
+      getVisibleRows: computed,
+    })
+
     this.width = 1320
     this.height = 418
     this.viewTypeList = customSights.length ? customSights : getViewTypeList(locale)
@@ -87,49 +154,49 @@ class GanttStore {
     this.locale = locale
   }
 
-  locale = {...defaultLocale}
+  locale = { ...defaultLocale }
 
   _wheelTimer: number | undefined
 
   scrollTimer: number | undefined
 
-  @observable data: Gantt.Item[] = []
+  data: Gantt.Item[] = []
 
-  @observable originData: Gantt.Record[] = []
+  originData: Gantt.Record[] = []
 
-  @observable columns: Gantt.Column[] = []
+  columns: Gantt.Column[] = []
 
-  @observable dependencies: Gantt.Dependence[] = []
+  dependencies: Gantt.Dependence[] = []
 
-  @observable scrolling = false
+  scrolling = false
 
-  @observable scrollTop = 0
+  scrollTop = 0
 
-  @observable collapse = false
+  collapse = false
 
-  @observable tableWidth: number
+  tableWidth: number
 
-  @observable viewWidth: number
+  viewWidth: number
 
-  @observable width: number
+  width: number
 
-  @observable height: number
+  height: number
 
-  @observable bodyWidth: number
+  bodyWidth: number
 
-  @observable translateX: number
+  translateX: number
 
-  @observable sightConfig: Gantt.SightConfig
+  sightConfig: Gantt.SightConfig
 
-  @observable showSelectionIndicator = false
+  showSelectionIndicator = false
 
-  @observable selectionIndicatorTop = 0
+  selectionIndicatorTop = 0
 
-  @observable dragging: Gantt.Bar | null = null
+  dragging: Gantt.Bar | null = null
 
-  @observable draggingType: Gantt.MoveType | null = null
+  draggingType: Gantt.MoveType | null = null
 
-  @observable disabled = false
+  disabled = false
 
   viewTypeList = getViewTypeList(this.locale)
 
@@ -163,7 +230,6 @@ class GanttStore {
     this.isRestDay = function_ || isRestDay
   }
 
-  @action
   setData(data: Gantt.Record[], startDateKey: string, endDateKey: string) {
     this.startDateKey = startDateKey
     this.endDateKey = endDateKey
@@ -171,7 +237,6 @@ class GanttStore {
     this.data = transverseData(data, startDateKey, endDateKey)
   }
 
-  @action
   toggleCollapse() {
     if (this.tableWidth > 0) {
       this.tableWidth = 0
@@ -181,27 +246,22 @@ class GanttStore {
     }
   }
 
-  @action
   setRowCollapse(item: Gantt.Item, collapsed: boolean) {
     item.collapsed = collapsed
-    // this.barList = this.getBarList();
   }
 
-  @action
   setOnUpdate(onUpdate: GanttProperties['onUpdate']) {
     this.onUpdate = onUpdate
   }
 
-  @action
   setColumns(columns: Gantt.Column[]) {
     this.columns = columns
   }
-  @action
+
   setDependencies(dependencies: Gantt.Dependence[]) {
     this.dependencies = dependencies
   }
 
-  @action
   setHideTable(isHidden = false) {
     if (isHidden) {
       this.tableWidth = 0
@@ -211,16 +271,16 @@ class GanttStore {
     }
   }
 
-  @action
   handlePanMove(translateX: number) {
     this.scrolling = true
     this.setTranslateX(translateX)
   }
-  @action
+
   handlePanEnd() {
     this.scrolling = false
   }
-  @action syncSize(size: { width?: number; height?: number }) {
+
+  syncSize(size: { width?: number; height?: number }) {
     if (!size.height || !size.width) return
 
     const { width, height } = size
@@ -232,27 +292,27 @@ class GanttStore {
     }
   }
 
-  @action handleResizeTableWidth(width: number) {
+  handleResizeTableWidth(width: number) {
     const columnsWidthArr = this.columns.filter(column => column.width > 0)
     if (this.columns.length === columnsWidthArr.length) return
     this.tableWidth = width
     this.viewWidth = this.width - this.tableWidth
   }
 
-  @action initWidth() {
+  initWidth() {
     this.tableWidth = this.totalColumnWidth || 250
     this.viewWidth = this.width - this.tableWidth
-    // 图表宽度不能小于 200
     if (this.viewWidth < 200) {
       this.viewWidth = 200
       this.tableWidth = this.width - this.viewWidth
     }
   }
-  @action
+
   setTranslateX(translateX: number) {
     this.translateX = Math.max(translateX, 0)
   }
-  @action switchSight(type: Gantt.Sight) {
+
+  switchSight(type: Gantt.Sight) {
     const target = find(this.viewTypeList, { type })
     if (target) {
       this.sightConfig = target
@@ -260,7 +320,7 @@ class GanttStore {
     }
   }
 
-  @action scrollToToday() {
+  scrollToToday() {
     const translateX = this.todayTranslateX - this.viewWidth / 2
     this.setTranslateX(translateX)
   }
@@ -269,39 +329,34 @@ class GanttStore {
     return dayjs(date).startOf('day').valueOf() / this.pxUnitAmp
   }
 
-  @computed get todayTranslateX() {
+  get todayTranslateX() {
     return dayjs().startOf('day').valueOf() / this.pxUnitAmp
   }
 
-  @computed get scrollBarWidth() {
+  get scrollBarWidth() {
     const MIN_WIDTH = 30
     return Math.max((this.viewWidth / this.scrollWidth) * 160, MIN_WIDTH)
   }
 
-  @computed get scrollLeft() {
+  get scrollLeft() {
     const rate = this.viewWidth / this.scrollWidth
     const currentDate = dayjs(this.translateAmp).toString()
-    // 默认滚动条在中间
     const half = (this.viewWidth - this.scrollBarWidth) / 2
     const viewScrollLeft =
       half + rate * (this.getTranslateXByDate(currentDate) - this.getTranslateXByDate(this.getStartDate()))
     return Math.min(Math.max(viewScrollLeft, 0), this.viewWidth - this.scrollBarWidth)
   }
 
-  @computed get scrollWidth() {
-    // TODO 待研究
-    // 最小宽度
+  get scrollWidth() {
     const init = this.viewWidth + 200
     return Math.max(Math.abs(this.viewWidth + this.translateX - this.getTranslateXByDate(this.getStartDate())), init)
   }
 
-  // 内容区滚动高度
-  @computed get bodyClientHeight() {
-    // 1是边框
+  get bodyClientHeight() {
     return this.height - HEADER_HEIGHT - 1
   }
 
-  @computed get getColumnsWidth(): number[] {
+  get getColumnsWidth(): number[] {
     if (this.columns.length === 1 && this.columns[0]?.width < 200) return [200]
     const totalColumnWidth = this.columns.reduce((width, item) => width + (item.width || 0), 0)
     const totalFlex = this.columns.reduce((total, item) => total + (item.width ? 0 : item.flex || 1), 0)
@@ -315,25 +370,22 @@ class GanttStore {
     })
   }
 
-  @computed get totalColumnWidth(): number {
+  get totalColumnWidth(): number {
     return this.getColumnsWidth.reduce((width, item) => width + (item || 0), 0)
   }
 
-  // 内容区滚动区域域高度
-  @computed get bodyScrollHeight() {
+  get bodyScrollHeight() {
     let height = this.getBarList.length * this.rowHeight + TOP_PADDING
     if (height < this.bodyClientHeight) height = this.bodyClientHeight
 
     return height
   }
 
-  // 1px对应的毫秒数
-  @computed get pxUnitAmp() {
+  get pxUnitAmp() {
     return this.sightConfig.value * 1000
   }
 
-  /** 当前开始时间毫秒数 */
-  @computed get translateAmp() {
+  get translateAmp() {
     const { translateX } = this
     return this.pxUnitAmp * translateX
   }
@@ -376,11 +428,9 @@ class GanttStore {
       return date.endOf('year')
     }
 
-    // 初始化当前时间
     let currentDate = dayjs(translateAmp)
     const dates: Gantt.MajorAmp[] = []
 
-    // 对可视区域内的时间进行迭代
     while (currentDate.isBetween(translateAmp - 1, endAmp + 1)) {
       const majorKey = currentDate.format(format)
 
@@ -394,7 +444,6 @@ class GanttStore {
         endDate: end,
       })
 
-      // 获取下次迭代的时间
       start = getStart(currentDate)
       currentDate = getNextDate(start)
     }
@@ -434,7 +483,6 @@ class GanttStore {
     const endAmp = startAmp + this.getDurationAmp()
     const format = minorFormatMap[this.sightConfig.type]
 
-    // eslint-disable-next-line unicorn/consistent-function-scoping
     const getNextDate = (start: Dayjs) => {
       const map = {
         day() {
@@ -504,17 +552,11 @@ class GanttStore {
     }
     const getMinorKey = (date: Dayjs) => {
       if (this.sightConfig.type === 'halfYear')
-        return (
-          date.format(format) +
-          (fstHalfYear.has(date.month())
-            ? this.locale.firstHalf
-            : this.locale.secondHalf)
-        )
+        return date.format(format) + (fstHalfYear.has(date.month()) ? this.locale.firstHalf : this.locale.secondHalf)
 
       return date.format(format)
     }
 
-    // 初始化当前时间
     let currentDate = dayjs(startAmp)
     const dates: Gantt.MinorAmp[] = []
     while (currentDate.isBetween(startAmp - 1, endAmp + 1)) {
@@ -537,9 +579,7 @@ class GanttStore {
     const dayRect = () => {
       const stAmp = date.startOf('day')
       const endAmp = date.endOf('day')
-      // @ts-ignore
       const left = stAmp / this.pxUnitAmp
-      // @ts-ignore
       const width = (endAmp - stAmp) / this.pxUnitAmp
 
       return {
@@ -625,11 +665,9 @@ class GanttStore {
     this.setTranslateX(translateX)
   }
 
-  @computed get getBarList(): Gantt.Bar[] {
+  get getBarList(): Gantt.Bar[] {
     const { pxUnitAmp, data } = this
-    // 最小宽度
     const minStamp = 11 * pxUnitAmp
-    // TODO 去除高度读取
     const height = 8
     const baseTop = TOP_PADDING + this.rowHeight / 2 - height / 2
     const topStep = this.rowHeight
@@ -652,7 +690,6 @@ class GanttStore {
         .endOf('day')
         .valueOf()
 
-      // 开始结束日期相同默认一天
       if (Math.abs(endAmp - startAmp) < minStamp) {
         startAmp = dayjs(item.startDate || 0)
           .startOf('day')
@@ -676,33 +713,30 @@ class GanttStore {
         translateY,
         width,
         label: item.content,
-        stepGesture: 'end', // start(开始）、moving(移动)、end(结束)
-        invalidDateRange: !item.endDate || !item.startDate, // 是否为有效时间区间
+        stepGesture: 'end',
+        invalidDateRange: !item.endDate || !item.startDate,
         dateTextFormat,
         getDateWidth,
         loading: false,
         _group: item.group,
-        _collapsed: item.collapsed, // 是否折叠
-        _depth: item._depth as number, // 表示子节点深度
-        _index: item._index, // 任务下标位置
-        _parent, // 原任务数据
-        _childrenCount: !item.children ? 0 : item.children.length, // 子任务
+        _collapsed: item.collapsed,
+        _depth: item._depth as number,
+        _index: item._index,
+        _parent,
+        _childrenCount: !item.children ? 0 : item.children.length,
       }
       item._bar = bar
       return bar
     })
-    // 进行展开扁平
     return observable(barList)
   }
 
-  @action
   handleWheel = (event: WheelEvent) => {
     if (event.deltaX !== 0) {
       event.preventDefault()
       event.stopPropagation()
     }
     if (this._wheelTimer) clearTimeout(this._wheelTimer)
-    // 水平滚动
     if (Math.abs(event.deltaX) > 0) {
       this.scrolling = true
       this.setTranslateX(this.translateX + event.deltaX)
@@ -721,10 +755,8 @@ class GanttStore {
     this.scrollTop = scrollTop
   }, 100)
 
-  // 虚拟滚动
-  @computed get getVisibleRows() {
+  get getVisibleRows() {
     const visibleHeight = this.bodyClientHeight
-    // 多渲染几个，减少空白
     const visibleRowCount = Math.ceil(visibleHeight / this.rowHeight) + 10
 
     const start = Math.max(Math.ceil(this.scrollTop / this.rowHeight) - 5, 0)
@@ -742,13 +774,11 @@ class GanttStore {
     this.showSelectionIndicator = false
   }
 
-  @action
   showSelectionBar(event: MouseEvent) {
     const scrollTop = this.mainElementRef.current?.scrollTop || 0
     const { top } = this.mainElementRef.current?.getBoundingClientRect() || {
       top: 0,
     }
-    // 内容区高度
     const contentHeight = this.getBarList.length * this.rowHeight
     const offsetY = event.clientY - top + scrollTop
     if (offsetY - contentHeight > TOP_PADDING) {
@@ -765,7 +795,6 @@ class GanttStore {
     return this.selectionIndicatorTop >= baseTop && this.selectionIndicatorTop <= baseTop + this.rowHeight
   }
 
-  @action
   handleDragStart(barInfo: Gantt.Bar, type: Gantt.MoveType) {
     this.dragging = barInfo
     this.draggingType = type
@@ -773,7 +802,6 @@ class GanttStore {
     this.isPointerPress = true
   }
 
-  @action
   handleDragEnd() {
     if (this.dragging) {
       this.dragging.stepGesture = 'end'
@@ -783,41 +811,36 @@ class GanttStore {
     this.isPointerPress = false
   }
 
-  @action
   handleInvalidBarLeave() {
     this.handleDragEnd()
   }
 
-  @action
   handleInvalidBarHover(barInfo: Gantt.Bar, left: number, width: number) {
     barInfo.translateX = left
     barInfo.width = width
     this.handleDragStart(barInfo, 'create')
   }
 
-  @action
   handleInvalidBarDragStart(barInfo: Gantt.Bar) {
     barInfo.stepGesture = 'moving'
   }
 
-  @action
   handleInvalidBarDragEnd(barInfo: Gantt.Bar, oldSize: { width: number; x: number }) {
     barInfo.invalidDateRange = false
     this.handleDragEnd()
     this.updateTaskDate(barInfo, oldSize, 'create')
   }
 
-  @action
   updateBarSize(barInfo: Gantt.Bar, { width, x }: { width: number; x: number }) {
     barInfo.width = width
     barInfo.translateX = Math.max(x, 0)
     barInfo.stepGesture = 'moving'
   }
+
   getMovedDay(ms: number): number {
     return Math.round(ms / ONE_DAY_MS)
   }
-  /** 更新时间 */
-  @action
+
   async updateTaskDate(
     barInfo: Gantt.Bar,
     oldSize: { width: number; x: number },
@@ -831,19 +854,15 @@ class GanttStore {
 
     if (type === 'move') {
       const moveTime = this.getMovedDay((translateX - oldSize.x) * this.pxUnitAmp)
-      // 移动，只根据移动距离偏移
       startDate = dayjs(oldStartDate).add(moveTime, 'day').format('YYYY-MM-DD HH:mm:ss')
       endDate = dayjs(oldEndDate).add(moveTime, 'day').hour(23).minute(59).second(59).format('YYYY-MM-DD HH:mm:ss')
     } else if (type === 'left') {
       const moveTime = this.getMovedDay((translateX - oldSize.x) * this.pxUnitAmp)
-      // 左侧移动，只改变开始时间
       startDate = dayjs(oldStartDate).add(moveTime, 'day').format('YYYY-MM-DD HH:mm:ss')
     } else if (type === 'right') {
       const moveTime = this.getMovedDay((width - oldSize.width) * this.pxUnitAmp)
-      // 右侧移动，只改变结束时间
       endDate = dayjs(oldEndDate).add(moveTime, 'day').hour(23).minute(59).second(59).format('YYYY-MM-DD HH:mm:ss')
     } else if (type === 'create') {
-      // 创建
       startDate = dayjs(translateX * this.pxUnitAmp).format('YYYY-MM-DD HH:mm:ss')
       endDate = dayjs((translateX + width) * this.pxUnitAmp)
         .subtract(1)

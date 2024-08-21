@@ -1,10 +1,10 @@
-import React, { useContext, useCallback } from 'react'
-import { observer } from 'mobx-react-lite'
 import classNames from 'classnames'
-import Context from '../../context'
+import { observer } from 'mobx-react-lite'
+import React, { useCallback, useContext } from 'react'
 import { TOP_PADDING } from '../../constants'
-import RowToggler from './RowToggler'
+import Context from '../../context'
 import './index.less'
+import RowToggler from './RowToggler'
 
 const TableRows = () => {
   const { store, onRow, tableIndent, expandIcon, prefixCls, onExpand } = useContext(Context)
@@ -23,7 +23,7 @@ const TableRows = () => {
           marginTop: 30,
         }}
       >
-        暂无数据
+        No Tasks
       </div>
     )
   }
